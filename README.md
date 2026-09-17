@@ -98,12 +98,24 @@ cada violação nova com arquivo, linha e explicação. Corrigir o problema e
 dar um novo push reavalia automaticamente — não é preciso fechar e reabrir
 o PR.
 
+### 4. Issue vinculada (`verificar-issue-vinculada`)
+Todo PR **precisa** referenciar, na descrição, a issue que ele resolve,
+usando uma das palavras-chave de fechamento automático do GitHub:
+`Closes #N`, `Fixes #N` ou `Resolves #N` (aceita variações como
+`closed`/`fixed`/`resolved`, em qualquer posição do texto). O número
+precisa ser de uma issue existente e aberta no repositório.
+
+Isso não é burocracia: é o que faz o **próprio GitHub fechar a issue
+automaticamente** assim que o PR é mesclado na `main` — ninguém precisa
+fechar issues manualmente. O template de PR do repositório já vem com o
+campo `Closes #` pronto para preencher.
+
 ### O que fazer se o PR for reprovado
-1. Leia o comentário do bot que reprovou (política de PR ou Code
-   Intelligence) — ele explica exatamente o motivo.
-2. Corrija o código (ou divida o PR em partes menores).
-3. Dê um novo `git push` na mesma branch — os checks rodam de novo
-   automaticamente.
+1. Leia o comentário do bot que reprovou (política de PR, Code
+   Intelligence ou Issue Vinculada) — ele explica exatamente o motivo.
+2. Corrija o código, a descrição do PR, ou divida o PR em partes menores.
+3. Dê um novo `git push` (ou edite a descrição do PR) — os checks rodam de
+   novo automaticamente.
 4. Se você acha que a reprovação é um falso positivo, converse com o
    professor antes de tentar contornar a regra.
 
