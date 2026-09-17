@@ -1,0 +1,45 @@
+name: Code Intelligence
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-intelligence:
+    name: code-intelligence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout com histórico completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Garantir que a base do PR está disponível localmente
+        run: git fetch origin ${{ github.event.pull_request.base.sha }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências do code-intelligence
+        run: |
+          pip install --disable-pip-version-check \
+            "tree-sitter==0.25.2" "tree-sitter-cpp==0.23.4" "tree-sitter-java==0.23.5" \
+            "tree-sitter-php==0.24.1" "tree-sitter-javascript==0.25.0" "ast-grep-py==0.45.3" \
+            "jedi" "libcst"
+
+      - name: Rodar verificação de regressões (PR vs. main)
+        id: verificacao
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/verificar_code_intelligence.py

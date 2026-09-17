@@ -1,0 +1,22 @@
+{
+  "duplication_detection": false,
+  "exclude_globs": [
+    "**/.venv/**",
+    "**/venv/**",
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.min.js",
+    "**/__pycache__/**",
+    "**/.git/**",
+    "**/.code-intelligence/**",
+    "**/*.blade.php",
+    "database/migrations/**",
+    "storage/**",
+    "bootstrap/cache/**",
+    "public/build/**",
+    "public/hot",
+    ".github/code_intelligence/**"
+  ]
+}
