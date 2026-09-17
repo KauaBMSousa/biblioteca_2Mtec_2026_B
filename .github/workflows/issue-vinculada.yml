@@ -1,0 +1,31 @@
+name: Issue Vinculada
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+jobs:
+  verificar-issue-vinculada:
+    name: verificar-issue-vinculada
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (apenas para ter o script)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Verificar referência de fechamento na descrição do PR
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/verificar_issue_vinculada.py
