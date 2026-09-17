@@ -129,6 +129,6 @@ _(o diagrama ER e a documentação do schema serão adicionados aqui pelo time
 Cada integrante do time adiciona sua própria linha abaixo, através de um
 Pull Request individual (veja a issue "Adicionar seu nome ao README").
 
-| Nome completo | E-mail | Registro de matrícula |
+| Nome completo | Nick | Registro de matrícula |
 |---|---|---|
 | _adicione sua linha aqui_ | | |
