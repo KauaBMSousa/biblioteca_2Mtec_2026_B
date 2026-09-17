@@ -27,13 +27,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: .github/code_intelligence/requirements-ci.txt
 
       - name: Instalar dependências do code-intelligence
-        run: |
-          pip install --disable-pip-version-check \
-            "tree-sitter==0.25.2" "tree-sitter-cpp==0.23.4" "tree-sitter-java==0.23.5" \
-            "tree-sitter-php==0.24.1" "tree-sitter-javascript==0.25.0" "ast-grep-py==0.45.3" \
-            "jedi" "libcst"
+        run: pip install --disable-pip-version-check -r .github/code_intelligence/requirements-ci.txt
 
       - name: Rodar verificação de regressões (PR vs. main)
         id: verificacao
