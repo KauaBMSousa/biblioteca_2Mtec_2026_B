@@ -131,4 +131,5 @@ Pull Request individual (veja a issue "Adicionar seu nome ao README").
 
 | Nome completo | Nick | Registro de matrícula |
 |---|---|---|
-| _adicione sua linha aqui_ | | |
+| Kauã Batista Miranda de Sousa | KauaBMSousa | 10518 |
+| Vinicius Frazão Barros | Frazao-009 | 10275 |
