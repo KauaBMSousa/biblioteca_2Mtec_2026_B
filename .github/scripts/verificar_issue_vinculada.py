@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Exige que a descrição do PR referencie uma issue com uma palavra-chave de
 fechamento automático do GitHub (Closes/Fixes/Resolves #N) — assim, quando o
-PR é mesclado, o próprio GitHub fecha a issue automaticamente. Esta issue
-precisa existir no repositório e não pode ser, ela mesma, um Pull Request.
+PR é mesclado, o próprio GitHub fecha a issue automaticamente (se ela ainda
+estiver aberta). Esta issue precisa existir no repositório e não pode ser,
+ela mesma, um Pull Request. Issues já fechadas também são aceitas: várias
+pessoas podem legitimamente referenciar a mesma issue compartilhada (ex.:
+a issue de onboarding "adicione seu nome ao README"), e a primeira PR
+mesclada já a fecha — isso não deve bloquear as demais.
 """
 import json
 import os
@@ -19,18 +23,15 @@ def extrair_referencias(corpo: str) -> list[int]:
     return sorted({int(n) for n in PADRAO.findall(corpo or "")})
 
 
-def issue_existe(repo: str, numero: int) -> tuple[bool, bool]:
-    """Retorna (existe_como_issue, esta_aberta)."""
+def issue_existe(repo: str, numero: int) -> bool:
     r = subprocess.run(
         ["gh", "api", f"repos/{repo}/issues/{numero}"],
         capture_output=True, text=True,
     )
     if r.returncode != 0:
-        return False, False
+        return False
     dado = json.loads(r.stdout)
-    if "pull_request" in dado:
-        return False, False
-    return True, dado.get("state") == "open"
+    return "pull_request" not in dado
 
 
 def comentar(repo: str, pr_number: str, corpo: str) -> None:
@@ -60,35 +61,30 @@ def main() -> None:
 
     referencias = extrair_referencias(corpo_pr)
 
-    validas, invalidas, fechadas = [], [], []
+    validas, invalidas = [], []
     for numero in referencias:
-        existe, aberta = issue_existe(repo, numero)
-        if not existe:
-            invalidas.append(numero)
-        elif not aberta:
-            fechadas.append(numero)
-        else:
+        if issue_existe(repo, numero):
             validas.append(numero)
+        else:
+            invalidas.append(numero)
 
     if validas:
         corpo = (
             f"{MARCADOR}\n"
             "## ✅ Issue vinculada corretamente\n\n"
-            f"Este PR fechará automaticamente: {', '.join(f'#{n}' for n in validas)} "
-            "quando for mesclado."
+            f"Este PR referencia: {', '.join(f'#{n}' for n in validas)} "
+            "(fecha automaticamente ao ser mesclado, se ainda estiver aberta)."
         )
-        if invalidas or fechadas:
-            extras = []
-            if invalidas:
-                extras.append(f"não encontradas: {', '.join(f'#{n}' for n in invalidas)}")
-            if fechadas:
-                extras.append(f"já fechadas: {', '.join(f'#{n}' for n in fechadas)}")
-            corpo += "\n\n⚠️ Outras referências no texto foram ignoradas (" + "; ".join(extras) + ")."
+        if invalidas:
+            corpo += (
+                "\n\n⚠️ Outras referências no texto foram ignoradas (não encontradas: "
+                + ", ".join(f"#{n}" for n in invalidas) + ")."
+            )
         comentar(repo, pr_number, corpo)
         sys.exit(0)
 
     linhas_erro = [
-        "Nenhuma referência válida a uma issue aberta foi encontrada na descrição do PR.",
+        "Nenhuma referência válida a uma issue foi encontrada na descrição do PR.",
         "",
         "Adicione uma linha como `Closes #12`, `Fixes #7` ou `Resolves #23` "
         "(em português ou inglês, `Closes`/`Fecha` não importa — use exatamente "
@@ -96,8 +92,6 @@ def main() -> None:
     ]
     if invalidas:
         linhas_erro.append(f"\nNúmeros citados que não existem como issue: {', '.join(f'#{n}' for n in invalidas)}.")
-    if fechadas:
-        linhas_erro.append(f"\nNúmeros citados que já estão fechados: {', '.join(f'#{n}' for n in fechadas)}.")
 
     corpo = (
         f"{MARCADOR}\n"
