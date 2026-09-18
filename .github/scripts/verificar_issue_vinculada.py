@@ -35,6 +35,11 @@ def issue_existe(repo: str, numero: int) -> bool:
 
 
 def comentar(repo: str, pr_number: str, corpo: str) -> None:
+    """Tenta publicar/atualizar o comentário no PR. Em PRs de fork o token é
+    somente leitura e isso falha com 403 — é esperado, não um erro real, e
+    nunca deve aparecer no console como se o script tivesse quebrado (por
+    isso capture_output=True em toda chamada `gh`). O veredito de verdade
+    já foi escrito no Step Summary do job antes desta função ser chamada."""
     lista = subprocess.run(
         ["gh", "api", f"repos/{repo}/issues/{pr_number}/comments", "--paginate"],
         capture_output=True, text=True,
@@ -43,14 +48,19 @@ def comentar(repo: str, pr_number: str, corpo: str) -> None:
     existente = next((c for c in comentarios if MARCADOR in c.get("body", "")), None)
     payload = json.dumps({"body": corpo})
     if existente:
-        subprocess.run(
+        r = subprocess.run(
             ["gh", "api", f"repos/{repo}/issues/comments/{existente['id']}", "-X", "PATCH", "--input", "-"],
-            input=payload, text=True,
+            input=payload, text=True, capture_output=True,
         )
     else:
-        subprocess.run(
+        r = subprocess.run(
             ["gh", "api", f"repos/{repo}/issues/{pr_number}/comments", "-X", "POST", "--input", "-"],
-            input=payload, text=True,
+            input=payload, text=True, capture_output=True,
+        )
+    if r.returncode != 0:
+        print(
+            "Nota: não foi possível comentar no PR (normal em PRs de fork, cujo token é "
+            "somente leitura). O resultado real está no Step Summary deste job, acima. ▲"
         )
 
 
@@ -80,6 +90,10 @@ def main() -> None:
                 "\n\n⚠️ Outras referências no texto foram ignoradas (não encontradas: "
                 + ", ".join(f"#{n}" for n in invalidas) + ")."
             )
+        print("ISSUE VINCULADA — APROVADO")
+        print(corpo)
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+            f.write(corpo + "\n")
         comentar(repo, pr_number, corpo)
         sys.exit(0)
 
@@ -99,6 +113,10 @@ def main() -> None:
         + "\n".join(linhas_erro)
         + "\n\n---\n*Edite a descrição do PR e o check reavalia automaticamente.*"
     )
+    print("ISSUE VINCULADA — REPROVADO")
+    print("\n".join(linhas_erro))
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+        f.write(corpo + "\n")
     comentar(repo, pr_number, corpo)
     sys.exit(1)
 
