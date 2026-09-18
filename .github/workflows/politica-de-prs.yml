@@ -35,24 +35,31 @@ jobs:
             const fs = require('fs');
             const corpo = fs.readFileSync('/tmp/comentario.md', 'utf8');
             const marcador = '<!-- pr-policy-bot -->';
-            const { data: comentarios } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-            });
-            const existente = comentarios.find(c => c.body.includes(marcador));
-            if (existente) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existente.id,
-                body: corpo,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            try {
+              const { data: comentarios } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
-                body: corpo,
               });
+              const existente = comentarios.find(c => c.body.includes(marcador));
+              if (existente) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existente.id,
+                  body: corpo,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: corpo,
+                });
+              }
+            } catch (err) {
+              // PRs de fork recebem um token somente leitura — nunca deixe a
+              // falha ao comentar derrubar o job (o veredito real já foi
+              // decidido pelo passo "Rodar verificação").
+              core.warning('Não foi possível comentar no PR (provável token somente leitura de PR de fork): ' + err.message);
             }
