@@ -129,6 +129,8 @@ def main():
         "## ✅ Política de Pull Requests aprovada\n\n"
         "Nenhuma reescrita total de arquivo e nenhum PR grande com arquivos não-novos detectado."
     )
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+        f.write(corpo + "\n")
     with open("/tmp/comentario.md", "w") as f:
         f.write(corpo)
 

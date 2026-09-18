@@ -46,6 +46,11 @@ def formatar(payload):
 
 
 def comentar(corpo):
+    """Tenta publicar/atualizar o comentário no PR. Em PRs de fork o token é
+    somente leitura e isso falha com 403 — é esperado, não um erro real, e
+    nunca deve aparecer no console como se o script tivesse quebrado (por
+    isso capture_output=True em toda chamada `gh`). O veredito de verdade
+    já foi escrito no Step Summary do job antes desta função ser chamada."""
     repo = os.environ["GITHUB_REPOSITORY"]
     pr_number = os.environ["PR_NUMBER"]
     lista = subprocess.run(
@@ -56,14 +61,19 @@ def comentar(corpo):
     existente = next((c for c in comentarios if MARCADOR in c.get("body", "")), None)
     payload = json.dumps({"body": corpo})
     if existente:
-        subprocess.run(
+        r = subprocess.run(
             ["gh", "api", f"repos/{repo}/issues/comments/{existente['id']}", "-X", "PATCH", "--input", "-"],
-            input=payload, text=True,
+            input=payload, text=True, capture_output=True,
         )
     else:
-        subprocess.run(
+        r = subprocess.run(
             ["gh", "api", f"repos/{repo}/issues/{pr_number}/comments", "-X", "POST", "--input", "-"],
-            input=payload, text=True,
+            input=payload, text=True, capture_output=True,
+        )
+    if r.returncode != 0:
+        print(
+            "Nota: não foi possível comentar no PR (normal em PRs de fork, cujo token é "
+            "somente leitura). O resultado real está no Step Summary deste job, acima. ▲"
         )
 
 
@@ -72,13 +82,24 @@ def main():
     try:
         payload = json.loads(resultado.stdout)
     except json.JSONDecodeError:
+        erro = (
+            "## 💥 Code Intelligence — erro ao rodar a verificação\n\n"
+            "A ferramenta não retornou uma saída válida (isso é um problema na verificação "
+            "em si, não no seu código). Avise o professor com o link deste job.\n\n"
+            f"stdout:\n```\n{resultado.stdout[:2000]}\n```\n"
+            f"stderr:\n```\n{resultado.stderr[:2000]}\n```"
+        )
         print("erro: saída inesperada do code-intelligence", file=sys.stderr)
         print("stdout:", resultado.stdout, file=sys.stderr)
         print("stderr:", resultado.stderr, file=sys.stderr)
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+            f.write(erro + "\n")
         sys.exit(1)
 
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     corpo = formatar(payload)
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+        f.write(corpo + "\n")
     comentar(corpo)
     sys.exit(2 if payload.get("regressions") else 0)
 
