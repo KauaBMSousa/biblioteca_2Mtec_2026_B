@@ -49,6 +49,15 @@ ambiente Laravel portátil — extrai e roda. O único pré-requisito é ter um
 **MySQL local rodando** (o mesmo que você já configurou na disciplina de
 Banco de Dados).
 
+> ⚠️ **Importante:** os comandos `artisan`, `composer`, `npm` e `php` só
+> funcionam corretamente **dentro do ambiente do Portaravel**, aberto via
+> `./shell.sh` (Linux) ou `shell.bat` (Windows). Fora desse shell, seu
+> terminal normal não conhece esses comandos (ou, se você tiver PHP/Composer
+> instalados no sistema, eles podem apontar para versões erradas e dar erro
+> estranho). Isso vale não só para a configuração inicial abaixo, mas para
+> **todo o dia a dia** do projeto — sempre que for rodar `artisan
+> make:model`, `composer require`, etc., abra o shell primeiro.
+
 ### 1. Faça um fork e clone o seu fork
 
 No GitHub, clique em **Fork** no topo deste repositório para criar sua
