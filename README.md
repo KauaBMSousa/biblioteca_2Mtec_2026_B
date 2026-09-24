@@ -40,6 +40,122 @@ idênticas — cada turma entrega sua própria implementação.
 - **Vite** para build de assets front-end
 - **GitHub Actions** para CI (veja "Regras do projeto" abaixo)
 
+## Configuração do ambiente local
+
+Não é preciso instalar PHP, Composer, Node ou nada disso no seu computador
+(inclusive em computador da escola, sem privilégios de administrador): o
+projeto usa o [Portaravel](https://github.com/ensismoebius/portaravel), um
+ambiente Laravel portátil — extrai e roda. O único pré-requisito é ter um
+**MySQL local rodando** (o mesmo que você já configurou na disciplina de
+Banco de Dados).
+
+### 1. Faça um fork e clone o seu fork
+
+No GitHub, clique em **Fork** no topo deste repositório para criar sua
+própria cópia. Depois clone **o seu fork** (não este repositório original):
+
+```bash
+git clone https://github.com/SEU-USUARIO/biblioteca_2Mtec_2026_B.git
+```
+
+Recomendado: adicione este repositório original como `upstream`, para
+conseguir trazer atualizações (novas issues, correções de CI, etc.) para o
+seu fork mais tarde:
+
+```bash
+cd biblioteca_2Mtec_2026_B
+git remote add upstream https://github.com/ensismoebius/biblioteca_2Mtec_2026_B.git
+cd ..
+```
+
+### 2. Baixe o Portaravel
+
+**Linux:**
+```bash
+curl -fL --progress-bar https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz
+cd portable-laravel-linux
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-windows.zip -OutFile pl.zip
+Expand-Archive pl.zip -DestinationPath .
+cd portable-laravel-windows
+```
+
+### 3. Troque a pasta `app/` pelo seu clone
+
+O Portaravel vem com um Laravel de exemplo em `app/` — substitua pelo
+repositório que você acabou de clonar (mova a pasta clonada do passo 1
+para dentro do Portaravel, renomeada para `app`):
+
+**Linux:**
+```bash
+rm -rf app
+mv ../biblioteca_2Mtec_2026_B app
+```
+
+**Windows (CMD):**
+```cmd
+rmdir /s /q app
+move ..\biblioteca_2Mtec_2026_B app
+```
+
+### 4. Instale as dependências e configure o `.env`
+
+Abra o shell de desenvolvimento (`php`, `composer`, `npm`, `artisan` já
+ficam disponíveis, sem precisar dos `.sh`/`.bat`): `./shell.sh` no Linux,
+`shell.bat` no Windows.
+
+Dentro do shell:
+
+**Linux:**
+```bash
+composer install
+npm install
+cp .env.example .env
+artisan key:generate
+```
+
+**Windows:**
+```cmd
+composer install
+npm install
+copy .env.example .env
+artisan key:generate
+```
+
+Abra o `.env` gerado e confira `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD`
+— já vem pré-preenchido para um MySQL local padrão (`root`, sem senha, em
+`127.0.0.1:3306`, banco `biblioteca`). Ajuste se o seu MySQL local usa
+outras credenciais.
+
+### 5. Crie o banco e rode as migrations
+
+Crie o banco `biblioteca` no seu MySQL local — pela linha de comando
+(`mysql -u root -e "CREATE DATABASE IF NOT EXISTS biblioteca;"`), pelo
+phpMyAdmin, MySQL Workbench ou o que preferir. Depois, ainda dentro do
+`./shell.sh`/`shell.bat`:
+
+```bash
+artisan migrate
+```
+
+### 6. Rode o projeto
+
+Saia do shell (`exit`) e inicie o servidor: `./run.sh` no Linux, ou
+`run.bat` no Windows (dois cliques também funciona).
+
+O navegador abre automaticamente em **http://127.0.0.1:8080**. Se aparecer
+a tela do Laravel/Breeze, está tudo funcionando.
+
+### IDE
+
+Sempre abra a pasta `app/` no seu editor (VSCode, PHPStorm, etc.) — **não**
+a raiz do Portaravel. O passo a passo completo de configuração de IDE
+(caminho do PHP, Xdebug, extensões recomendadas) está no
+[README do Portaravel](https://github.com/ensismoebius/portaravel#-english).
+
 ## Como contribuir
 
 1. Escolha uma issue aberta e sem responsável, atribua-a a si mesmo.
