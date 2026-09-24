@@ -83,7 +83,39 @@ Expand-Archive pl.zip -DestinationPath .
 cd portable-laravel-windows
 ```
 
-### 3. Troque a pasta `app/` pelo seu clone
+### 3. Ajuste os scripts do Portaravel para usar MySQL
+
+Por padrão, o Portaravel roda com um banco SQLite embutido: os scripts
+`_env.sh`/`_env.bat` sobrescrevem `DB_CONNECTION`/`DB_DATABASE` como
+variáveis de ambiente, o que ignora silenciosamente o que você configurar
+no `.env` (Laravel dá prioridade à variável de ambiente). Como este
+projeto usa **MySQL** (ver "Stack técnica"), é preciso corrigir isso uma
+única vez, editando 4 arquivos para forçar `mysql` logo depois que eles
+carregam o `_env.sh`/`_env.bat`.
+
+**Linux** — em `shell.sh`, `run.sh`, `artisan.sh` e `composer.sh`,
+adicione estas duas linhas logo após a linha `source "$DIST_ROOT/_env.sh"`:
+```bash
+export DB_CONNECTION=mysql
+export DB_DATABASE=biblioteca
+```
+
+Ou rode este comando (uma vez, na pasta do Portaravel) para aplicar nos
+quatro arquivos de uma vez:
+```bash
+for f in shell.sh run.sh artisan.sh composer.sh; do
+  sed -i '/source.*_env\.sh/a export DB_CONNECTION=mysql\nexport DB_DATABASE=biblioteca' "$f"
+done
+```
+
+**Windows** — em `shell.bat`, `run.bat`, `artisan.bat` e `composer.bat`,
+adicione estas duas linhas logo após a linha `call "%DIST_ROOT%\_env.bat"`:
+```bat
+set "DB_CONNECTION=mysql"
+set "DB_DATABASE=biblioteca"
+```
+
+### 4. Troque a pasta `app/` pelo seu clone
 
 O Portaravel vem com um Laravel de exemplo em `app/` — substitua pelo
 repositório que você acabou de clonar (mova a pasta clonada do passo 1
@@ -101,7 +133,7 @@ rmdir /s /q app
 move ..\biblioteca_2Mtec_2026_B app
 ```
 
-### 4. Instale as dependências e configure o `.env`
+### 5. Instale as dependências e configure o `.env`
 
 Abra o shell de desenvolvimento (`php`, `composer`, `npm`, `artisan` já
 ficam disponíveis, sem precisar dos `.sh`/`.bat`): `./shell.sh` no Linux,
@@ -130,7 +162,7 @@ Abra o `.env` gerado e confira `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD`
 `127.0.0.1:3306`, banco `biblioteca`). Ajuste se o seu MySQL local usa
 outras credenciais.
 
-### 5. Crie o banco e rode as migrations
+### 6. Crie o banco e rode as migrations
 
 Crie o banco `biblioteca` no seu MySQL local — pela linha de comando
 (`mysql -u root -e "CREATE DATABASE IF NOT EXISTS biblioteca;"`), pelo
@@ -141,7 +173,7 @@ phpMyAdmin, MySQL Workbench ou o que preferir. Depois, ainda dentro do
 artisan migrate
 ```
 
-### 6. Rode o projeto
+### 7. Rode o projeto
 
 Saia do shell (`exit`) e inicie o servidor: `./run.sh` no Linux, ou
 `run.bat` no Windows (dois cliques também funciona).
