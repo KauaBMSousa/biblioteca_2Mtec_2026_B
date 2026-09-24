@@ -1,0 +1,43 @@
+name: Estilo de Código (Pint)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pint:
+    name: pint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Cache do Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Rodar Pint
+        run: |
+          if ./vendor/bin/pint --test; then
+            echo "## ✅ Pint — nenhum problema de estilo" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## ❌ Pint encontrou problemas de estilo" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo 'Rode `./vendor/bin/pint` localmente (sem `--test`) para corrigir automaticamente, depois faça commit e push.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

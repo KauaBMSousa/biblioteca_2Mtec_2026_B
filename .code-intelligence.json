@@ -17,6 +17,7 @@
     "bootstrap/cache/**",
     "public/build/**",
     "public/hot",
-    ".github/code_intelligence/**"
+    ".github/code_intelligence/**",
+    ".github/scripts/**"
   ]
 }

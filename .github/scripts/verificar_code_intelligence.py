@@ -5,13 +5,34 @@ O código-fonte da ferramenta vive em `.github/code_intelligence/` (cópia
 vendorizada, somente leitura — nunca edite esses arquivos aqui). Sai com
 código 2 se o PR introduz qualquer violação nova em relação à `main`
 (qualquer severidade — a política do professor é tolerância zero), senão 0.
+
+IMPORTANTE: o subcomando `diff` da ferramenta filtra os arquivos
+analisados só pela extensão (`Workspace._is_analyzable`) — ele NUNCA
+aplica o `exclude_globs` do `.code-intelligence.json` (isso só é
+respeitado pelo caminho de indexação completa, não pelo `diff`). Sem
+correção, isso reporta violações em arquivos que explicitamente
+excluímos (migrations, blade, etc.). Por isso filtramos aqui, do lado
+de fora, usando os mesmos padrões do `.code-intelligence.json`.
 """
+import fnmatch
 import json
 import os
 import subprocess
 import sys
 
 MARCADOR = "<!-- code-intelligence-bot -->"
+
+
+def carregar_exclude_globs():
+    try:
+        with open(".code-intelligence.json", encoding="utf-8") as f:
+            return json.load(f).get("exclude_globs", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def excluido(caminho, padroes):
+    return any(fnmatch.fnmatch(caminho, p) or fnmatch.fnmatch("/" + caminho, p) for p in padroes)
 
 
 def rodar_diff():
@@ -95,6 +116,11 @@ def main():
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
             f.write(erro + "\n")
         sys.exit(1)
+
+    padroes = carregar_exclude_globs()
+    payload["regressions"] = [
+        v for v in payload.get("regressions", []) if not excluido(v["file"], padroes)
+    ]
 
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     corpo = formatar(payload)
