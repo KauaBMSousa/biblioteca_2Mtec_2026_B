@@ -288,4 +288,4 @@ Pull Request individual (veja a issue "Adicionar seu nome ao README").
 
 | Nome completo | Nick | Registro de matrícula |
 |---|---|---|
-| _adicione sua linha aqui_ | | |
+| Nathan Rosário de Almeida | d3monrootkit | 10400 |
